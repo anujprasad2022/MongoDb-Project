@@ -44,7 +44,6 @@
             border: none;
             border-radius: 4px;
             cursor: pointer;
-            margin-bottom: 10px;
         }
 
         button:hover {
@@ -66,16 +65,10 @@
 
         th {
             background-color: #f2f2f2;
-            cursor: pointer; /* Add cursor style for sorting */
         }
 
         td {
             vertical-align: middle;
-        }
-
-        /* Highlighted text style */
-        .highlight {
-            background-color: yellow;
         }
     </style>
 </head>
@@ -85,34 +78,30 @@
         <h1>Bookstore</h1>
         <div>
             <h2>Add Book</h2>
-            <form onsubmit="createBook(); return false;">
+            <form id="bookForm" onsubmit="submitBook(); return false;">
+                <input type="hidden" id="bookId">
                 <label for="title">Title:</label>
                 <input type="text" id="title" required>
                 <label for="author">Author:</label>
                 <input type="text" id="author" required>
                 <label for="isbn">ISBN:</label>
                 <input type="text" id="isbn" required>
-                <button type="submit">Add Book</button>
+                <button type="submit" id="submitBtn">Add Book</button>
+                <button type="button" onclick="resetForm()">Cancel</button>
             </form>
         </div>
         <div>
             <h2>Search Book</h2>
             <input type="text" id="search" oninput="searchBooks()" placeholder="Search by title">
-            <button onclick="clearSearch()">Clear Search</button>
-        </div>
-        <div>
-            <h2>Filter by Author</h2>
-            <input type="text" id="filter" oninput="filterBooks()" placeholder="Filter by author">
         </div>
         <h2>Books</h2>
-        <p id="bookCount"></p>
         <table>
             <thead>
                 <tr>
-                    <th onclick="sortBooksByTitle()">ID</th>
-                    <th onclick="sortBooksByTitle()">Title</th>
-                    <th onclick="sortBooksByAuthor()">Author</th>
-                    <th onclick="sortBooksByISBN()">ISBN</th>
+                    <th>ID</th>
+                    <th>Title</th>
+                    <th>Author</th>
+                    <th>ISBN</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -129,27 +118,35 @@
             booksTable.innerHTML = '';
             books.forEach(book => {
                 booksTable.innerHTML += `
-                <tr>
+                <tr id="${book.id}">
                     <td>${book.id}</td>
                     <td>${book.title}</td>
                     <td>${book.author}</td>
                     <td>${book.isbn}</td>
                     <td>
+                        <button onclick="editBook('${book.id}')">Edit</button>
                         <button onclick="deleteBook('${book.id}')">Delete</button>
                     </td>
                 </tr>
             `;
             });
-            displayBookCount(); // Update book count after fetching books
         }
 
-        async function createBook() {
+        async function submitBook() {
             const title = document.getElementById('title').value;
             const author = document.getElementById('author').value;
             const isbn = document.getElementById('isbn').value;
+            const bookId = document.getElementById('bookId').value;
 
-            const response = await fetch('/api/books', {
-                method: 'POST',
+            let url = '/api/books';
+            let method = 'POST';
+            if (bookId) {
+                url += `/${bookId}`;
+                method = 'PUT';
+            }
+
+            const response = await fetch(url, {
+                method: method,
                 headers: {
                     'Content-Type': 'application/json',
                 },
@@ -158,14 +155,22 @@
 
             if (response.ok) {
                 fetchBooks();
-                document.getElementById('title').value = '';
-                document.getElementById('author').value = '';
-                document.getElementById('isbn').value = '';
+                resetForm();
+            }
+        }
+
+        async function deleteBook(id) {
+            const response = await fetch(`/api/books/${id}`, {
+                method: 'DELETE',
+            });
+
+            if (response.ok) {
+                fetchBooks();
             }
         }
 
         async function searchBooks() {
-            const title = document.getElementById('search').value.toLowerCase();
+            const title = document.getElementById('search').value;
 
             if (title.length > 0) {
                 const response = await fetch(`/api/books/search?title=${encodeURIComponent(title)}`);
@@ -173,89 +178,39 @@
                 const booksTable = document.getElementById('books');
                 booksTable.innerHTML = '';
                 books.forEach(book => {
-                    const titleLowerCase = book.title.toLowerCase();
-                    const highlightedTitle = titleLowerCase.replace(title, `<span class="highlight">${title}</span>`);
                     booksTable.innerHTML += `
-                        <tr>
-                            <td>${book.id}</td>
-                            <td>${highlightedTitle}</td>
-                            <td>${book.author}</td>
-                            <td>${book.isbn}</td>
-                            <td>
-                                <button onclick="deleteBook('${book.id}')">Delete</button>
-                            </td>
-                        </tr>
-                    `;
+                    <tr id="${book.id}">
+                        <td>${book.id}</td>
+                        <td>${book.title}</td>
+                        <td>${book.author}</td>
+                        <td>${book.isbn}</td>
+                        <td>
+                            <button onclick="editBook('${book.id}')">Edit</button>
+                            <button onclick="deleteBook('${book.id}')">Delete</button>
+                        </td>
+                    </tr>
+                `;
                 });
             } else {
                 fetchBooks();
             }
         }
 
-        function clearSearch() {
-            document.getElementById('search').value = '';
-            fetchBooks();
+        function editBook(id) {
+            const book = document.getElementById(id);
+            document.getElementById('bookId').value = id;
+            document.getElementById('title').value = book.cells[1].textContent;
+            document.getElementById('author').value = book.cells[2].textContent;
+            document.getElementById('isbn').value = book.cells[3].textContent;
+            document.getElementById('submitBtn').textContent = 'Update Book';
         }
 
-        function filterBooks() {
-            const filterValue = document.getElementById('filter').value.toLowerCase();
-            const rows = Array.from(document.getElementById('books').rows).slice(1); // Exclude the header row
-
-            rows.forEach(row => {
-                const author = row.cells[2].textContent.trim().toLowerCase();
-                if (author.includes(filterValue)) {
-                    row.style.display = ''; // Show row if it matches filter
-                } else {
-                    row.style.display = 'none'; // Hide row if it doesn't match filter
-                }
-            });
-        }
-
-        function sortBooksByTitle() {
-            const booksTable = document.getElementById('books');
-            const rows = Array.from(booksTable.rows).slice(1); // Exclude the header row
-            rows.sort((rowA, rowB) => {
-                const titleA = rowA.cells[1].textContent.trim().toLowerCase();
-                const titleB = rowB.cells[1].textContent.trim().toLowerCase();
-                if (titleA < titleB) return -1;
-                if (titleA > titleB) return 1;
-                return 0;
-            });
-            booksTable.innerHTML = '';
-            rows.forEach(row => booksTable.appendChild(row));
-        }
-
-        function sortBooksByAuthor() {
-            const booksTable = document.getElementById('books');
-            const rows = Array.from(booksTable.rows).slice(1); // Exclude the header row
-            rows.sort((rowA, rowB) => {
-                const authorA = rowA.cells[2].textContent.trim().toLowerCase();
-                const authorB = rowB.cells[2].textContent.trim().toLowerCase();
-                if (authorA < authorB) return -1;
-                if (authorA > authorB) return 1;
-                return 0;
-            });
-            booksTable.innerHTML = '';
-            rows.forEach(row => booksTable.appendChild(row));
-        }
-
-        function sortBooksByISBN() {
-            const booksTable = document.getElementById('books');
-            const rows = Array.from(booksTable.rows).slice(1); // Exclude the header row
-            rows.sort((rowA, rowB) => {
-                const isbnA = rowA.cells[3].textContent.trim().toLowerCase();
-                const isbnB = rowB.cells[3].textContent.trim().toLowerCase();
-                if (isbnA < isbnB) return -1;
-                if (isbnA > isbnB) return 1;
-                return 0;
-            });
-            booksTable.innerHTML = '';
-            rows.forEach(row => booksTable.appendChild(row));
-        }
-
-        function displayBookCount() {
-            const count = document.getElementById('books').rows.length - 1; // Exclude the header row
-            document.getElementById('bookCount').textContent = `Total Books: ${count}`;
+        function resetForm() {
+            document.getElementById('bookId').value = '';
+            document.getElementById('title').value = '';
+            document.getElementById('author').value = '';
+            document.getElementById('isbn').value = '';
+            document.getElementById('submitBtn').textContent = 'Add Book';
         }
 
         fetchBooks();
