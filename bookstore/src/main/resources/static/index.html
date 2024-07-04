@@ -2,137 +2,133 @@
 <html lang="en">
 
 <head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Bookstore</title>
-	<style>
-		body {
-			font-family: Arial, sans-serif;
-			line-height: 1.6;
-			margin: 20px;
-		}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bookstore</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+        }
 
-		h1,
-		h2 {
-			color: #333;
-		}
+        h1,
+        h2 {
+            color: #333;
+        }
 
-		form {
-			margin-bottom: 20px;
-		}
+        form {
+            margin-bottom: 20px;
+        }
 
-		label {
-			display: block;
-			margin-bottom: 5px;
-		}
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
 
-		input[type="text"],
-		input[type="number"],
-		select {
-			width: 200px;
-			padding: 8px;
-			margin: 5px 0 10px;
-			border: 1px solid #ccc;
-			border-radius: 4px;
-			box-sizing: border-box;
-		}
+        input[type="text"],
+        input[type="number"],
+        select {
+            width: 200px;
+            padding: 8px;
+            margin: 5px 0 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
 
-		button {
-			padding: 10px 20px;
-			background-color: #4CAF50;
-			color: white;
-			border: none;
-			border-radius: 4px;
-			cursor: pointer;
-		}
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
 
-		button:hover {
-			background-color: #45a049;
-		}
+        button:hover {
+            background-color: #45a049;
+        }
 
-		table {
-			width: 100%;
-			border-collapse: collapse;
-			margin-top: 20px;
-		}
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
 
-		th,
-		td {
-			border: 1px solid #ddd;
-			padding: 8px;
-			text-align: left;
-		}
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
 
-		th {
-			background-color: #f2f2f2;
-		}
+        th {
+            background-color: #f2f2f2;
+            cursor: pointer; /* Add cursor style for sorting */
+        }
 
-		td {
-			vertical-align: middle;
-		}
-	</style>
+        td {
+            vertical-align: middle;
+        }
+
+        /* Highlighted text style */
+        .highlight {
+            background-color: yellow;
+        }
+    </style>
 </head>
 
 <body>
-	<div>
-		<h1>Bookstore</h1>
-		<div>
-			<h2>Add Book</h2>
-			<form onsubmit="createBook(); return false;">
-				<label for="title">Title:</label>
-				<input type="text" id="title" required>
-				<label for="author">Author:</label>
-				<input type="text" id="author" required>
-				<label for="isbn">ISBN:</label>
-				<input type="text" id="isbn" required>
-				<button type="submit">Add Book</button>
-			</form>
-		</div>
-		<div>
-			<h2>Search Book</h2>
-			<input type="text" id="search" oninput="searchBooks()" placeholder="Search by title">
-		</div>
-		<div>
-			<h2>Pagination & Sorting</h2>
-			<label for="sort">Sort by:</label>
-			<select id="sort" onchange="fetchBooks()">
-				<option value="title">Title</option>
-				<option value="author">Author</option>
-				<option value="isbn">ISBN</option>
-			</select>
-			<label for="page">Page:</label>
-			<input type="number" id="page" value="0" onchange="fetchBooks()">
-			<label for="size">Page Size:</label>
-			<input type="number" id="size" value="10" onchange="fetchBooks()">
-		</div>
-		<h2>Books</h2>
-		<table>
-			<thead>
-				<tr>
-					<th>ID</th>
-					<th>Title</th>
-					<th>Author</th>
-					<th>ISBN</th>
-					<th>Actions</th>
-				</tr>
-			</thead>
-			<tbody id="books">
-				<!-- Books will be listed here -->
-			</tbody>
-		</table>
-	</div>
-	<script>
-		async function fetchBooks() {
-			const sortBy = document.getElementById('sort').value;
-			const page = document.getElementById('page').value;
-			const size = document.getElementById('size').value;
-
-			const response = await fetch(`/api/books/paged?page=${page}&size=${size}&sortBy=${sortBy}`);
-			const books = await response.json();
-			const booksTable = document.getElementById('books');
-			booksTable.innerHTML = '';
-			books.content.forEach(book => {
-				booksTable.innerHTML += `
+    <div>
+        <h1>Bookstore</h1>
+        <div>
+            <h2>Add Book</h2>
+            <form onsubmit="createBook(); return false;">
+                <label for="title">Title:</label>
+                <input type="text" id="title" required>
+                <label for="author">Author:</label>
+                <input type="text" id="author" required>
+                <label for="isbn">ISBN:</label>
+                <input type="text" id="isbn" required>
+                <button type="submit">Add Book</button>
+            </form>
+        </div>
+        <div>
+            <h2>Search Book</h2>
+            <input type="text" id="search" oninput="searchBooks()" placeholder="Search by title">
+            <button onclick="clearSearch()">Clear Search</button>
+        </div>
+        <div>
+            <h2>Filter by Author</h2>
+            <input type="text" id="filter" oninput="filterBooks()" placeholder="Filter by author">
+        </div>
+        <h2>Books</h2>
+        <p id="bookCount"></p>
+        <table>
+            <thead>
+                <tr>
+                    <th onclick="sortBooksByTitle()">ID</th>
+                    <th onclick="sortBooksByTitle()">Title</th>
+                    <th onclick="sortBooksByAuthor()">Author</th>
+                    <th onclick="sortBooksByISBN()">ISBN</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="books">
+                <!-- Books will be listed here -->
+            </tbody>
+        </table>
+    </div>
+    <script>
+        async function fetchBooks() {
+            const response = await fetch(`/api/books`);
+            const books = await response.json();
+            const booksTable = document.getElementById('books');
+            booksTable.innerHTML = '';
+            books.forEach(book => {
+                booksTable.innerHTML += `
                 <tr>
                     <td>${book.id}</td>
                     <td>${book.title}</td>
@@ -143,65 +139,127 @@
                     </td>
                 </tr>
             `;
-			});
-		}
+            });
+            displayBookCount(); // Update book count after fetching books
+        }
 
-		async function createBook() {
-			const title = document.getElementById('title').value;
-			const author = document.getElementById('author').value;
-			const isbn = document.getElementById('isbn').value;
+        async function createBook() {
+            const title = document.getElementById('title').value;
+            const author = document.getElementById('author').value;
+            const isbn = document.getElementById('isbn').value;
 
-			const response = await fetch('/api/books', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify({title, author, isbn}),
-			});
+            const response = await fetch('/api/books', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ title, author, isbn }),
+            });
 
-			if (response.ok) {
-				fetchBooks();
-			}
-		}
+            if (response.ok) {
+                fetchBooks();
+                document.getElementById('title').value = '';
+                document.getElementById('author').value = '';
+                document.getElementById('isbn').value = '';
+            }
+        }
 
-		async function deleteBook(id) {
-			const response = await fetch(`/api/books/${id}`, {
-				method: 'DELETE',
-			});
+        async function searchBooks() {
+            const title = document.getElementById('search').value.toLowerCase();
 
-			if (response.ok) {
-				fetchBooks();
-			}
-		}
+            if (title.length > 0) {
+                const response = await fetch(`/api/books/search?title=${encodeURIComponent(title)}`);
+                const books = await response.json();
+                const booksTable = document.getElementById('books');
+                booksTable.innerHTML = '';
+                books.forEach(book => {
+                    const titleLowerCase = book.title.toLowerCase();
+                    const highlightedTitle = titleLowerCase.replace(title, `<span class="highlight">${title}</span>`);
+                    booksTable.innerHTML += `
+                        <tr>
+                            <td>${book.id}</td>
+                            <td>${highlightedTitle}</td>
+                            <td>${book.author}</td>
+                            <td>${book.isbn}</td>
+                            <td>
+                                <button onclick="deleteBook('${book.id}')">Delete</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } else {
+                fetchBooks();
+            }
+        }
 
-		async function searchBooks() {
-			const title = document.getElementById('search').value;
+        function clearSearch() {
+            document.getElementById('search').value = '';
+            fetchBooks();
+        }
 
-			if (title.length > 0) {
-				const response = await fetch(`/api/books/search?title=${title}`);
-				const books = await response.json();
-				const booksTable = document.getElementById('books');
-				booksTable.innerHTML = '';
-				books.forEach(book => {
-					booksTable.innerHTML += `
-                    <tr>
-                        <td>${book.id}</td>
-                        <td>${book.title}</td>
-                        <td>${book.author}</td>
-                        <td>${book.isbn}</td>
-                        <td>
-                            <button onclick="deleteBook('${book.id}')">Delete</button>
-                        </td>
-                    </tr>
-                `;
-				});
-			} else {
-				fetchBooks();
-			}
-		}
+        function filterBooks() {
+            const filterValue = document.getElementById('filter').value.toLowerCase();
+            const rows = Array.from(document.getElementById('books').rows).slice(1); // Exclude the header row
 
-		fetchBooks();
-	</script>
+            rows.forEach(row => {
+                const author = row.cells[2].textContent.trim().toLowerCase();
+                if (author.includes(filterValue)) {
+                    row.style.display = ''; // Show row if it matches filter
+                } else {
+                    row.style.display = 'none'; // Hide row if it doesn't match filter
+                }
+            });
+        }
+
+        function sortBooksByTitle() {
+            const booksTable = document.getElementById('books');
+            const rows = Array.from(booksTable.rows).slice(1); // Exclude the header row
+            rows.sort((rowA, rowB) => {
+                const titleA = rowA.cells[1].textContent.trim().toLowerCase();
+                const titleB = rowB.cells[1].textContent.trim().toLowerCase();
+                if (titleA < titleB) return -1;
+                if (titleA > titleB) return 1;
+                return 0;
+            });
+            booksTable.innerHTML = '';
+            rows.forEach(row => booksTable.appendChild(row));
+        }
+
+        function sortBooksByAuthor() {
+            const booksTable = document.getElementById('books');
+            const rows = Array.from(booksTable.rows).slice(1); // Exclude the header row
+            rows.sort((rowA, rowB) => {
+                const authorA = rowA.cells[2].textContent.trim().toLowerCase();
+                const authorB = rowB.cells[2].textContent.trim().toLowerCase();
+                if (authorA < authorB) return -1;
+                if (authorA > authorB) return 1;
+                return 0;
+            });
+            booksTable.innerHTML = '';
+            rows.forEach(row => booksTable.appendChild(row));
+        }
+
+        function sortBooksByISBN() {
+            const booksTable = document.getElementById('books');
+            const rows = Array.from(booksTable.rows).slice(1); // Exclude the header row
+            rows.sort((rowA, rowB) => {
+                const isbnA = rowA.cells[3].textContent.trim().toLowerCase();
+                const isbnB = rowB.cells[3].textContent.trim().toLowerCase();
+                if (isbnA < isbnB) return -1;
+                if (isbnA > isbnB) return 1;
+                return 0;
+            });
+            booksTable.innerHTML = '';
+            rows.forEach(row => booksTable.appendChild(row));
+        }
+
+        function displayBookCount() {
+            const count = document.getElementById('books').rows.length - 1; // Exclude the header row
+            document.getElementById('bookCount').textContent = `Total Books: ${count}`;
+        }
+
+        fetchBooks();
+    </script>
 </body>
 
 </html>
